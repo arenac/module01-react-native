@@ -16,30 +16,33 @@ export default function App() {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  async function loadRepos() {
+  useEffect(() => {
     if(loading) {
       return;
     }
     setLoading(true);
-    await api
-      .get('repositories')
+    api.get('repositories')
       .then((response) => {
         setRepos(response.data);
       })
       .finally(() => {
         setLoading(false);
       })
-  }
-
-  useEffect(() => {
-    loadRepos();
   }, []);
 
   async function handleLikeRepository(id) {
         
-    await api.post(`repositories/${id}/like`);
+    const response = await api.post(`repositories/${id}/like`);
     
-    loadRepos();
+    const updated = repos.map(repo => {
+      if(repo.id === id) {
+        return response.data;
+      } else {
+        return repo;
+      }
+    })
+
+    setRepos(updated);
   }
 
   return (
@@ -53,17 +56,14 @@ export default function App() {
             <View style={styles.repositoryContainer}>
               <Text style={styles.repository}>{repo.title}</Text>
 
-              <FlatList 
-                style={styles.techsContainer}
-                data={repo.techs}
-                keyExtractor={item => item}
-                renderItem={({item: tech}) => (
-                  <Text style={styles.tech}>
+              <View style={styles.techsContainer}>
+                {repo.techs.map(tech => (
+                  <Text key={tech} style={styles.tech}>
                     {tech}
                   </Text>
-                )}
-              />
-            
+                ))}
+              </View>
+              
               <View style={styles.likesContainer}>
                 <Text
                   style={styles.likeText}
